@@ -1,4 +1,5 @@
 ﻿using Blindness_API.Models;
+using Blindness_API.Models.DTO;
 using MagicVilla_VillaAPI.Models.Dto;
 
 namespace MagicVilla_VillaAPI.Repository.IRepository
@@ -7,6 +8,6 @@ namespace MagicVilla_VillaAPI.Repository.IRepository
     {
         bool IsUniqueUser(string username);
         Task<LoginResponseDTO> Login(LoginRequestDTO loginRequestDTO);
-        Task<LocalUser> Register(RegisterationRequestDTO registerationRequestDTO);
+        Task<UserDTO> Register(RegisterationRequestDTO registerationRequestDTO);
     }
 }
