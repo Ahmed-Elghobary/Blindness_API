@@ -6,35 +6,24 @@ using Microsoft.EntityFrameworkCore.Migrations;
 namespace Blindness_API.Migrations
 {
     /// <inheritdoc />
-    public partial class AddApplicationUser : Migration
+    public partial class test : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Results_localUsers_PatientID",
-                table: "Results");
-
-            migrationBuilder.DropIndex(
-                name: "IX_Results_PatientID",
-                table: "Results");
-
-            migrationBuilder.DropColumn(
-                name: "PatientID",
-                table: "Results");
-
-            migrationBuilder.AddColumn<int>(
-                name: "LocalUserId",
-                table: "Results",
-                type: "int",
-                nullable: true);
-
-            migrationBuilder.AddColumn<string>(
-                name: "UserId",
-                table: "Results",
-                type: "nvarchar(450)",
-                nullable: false,
-                defaultValue: "");
+            migrationBuilder.CreateTable(
+                name: "Articles",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    Title = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Link = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Articles", x => x.Id);
+                });
 
             migrationBuilder.CreateTable(
                 name: "AspNetRoles",
@@ -56,6 +45,8 @@ namespace Blindness_API.Migrations
                 {
                     Id = table.Column<string>(type: "nvarchar(450)", nullable: false),
                     Name = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OtpCode = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    OtpExpiryTime = table.Column<DateTime>(type: "datetime2", nullable: true),
                     UserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     NormalizedUserName = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
                     Email = table.Column<string>(type: "nvarchar(256)", maxLength: 256, nullable: true),
@@ -74,6 +65,37 @@ namespace Blindness_API.Migrations
                 constraints: table =>
                 {
                     table.PrimaryKey("PK_AspNetUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "localUsers",
+                columns: table => new
+                {
+                    Id = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    UserName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Email = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Password = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Role = table.Column<string>(type: "nvarchar(max)", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_localUsers", x => x.Id);
+                });
+
+            migrationBuilder.CreateTable(
+                name: "medicalTests",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TestName = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Description = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateConducted = table.Column<DateTime>(type: "datetime2", nullable: false)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_medicalTests", x => x.ID);
                 });
 
             migrationBuilder.CreateTable(
@@ -182,15 +204,41 @@ namespace Blindness_API.Migrations
                         onDelete: ReferentialAction.Cascade);
                 });
 
-            migrationBuilder.CreateIndex(
-                name: "IX_Results_LocalUserId",
-                table: "Results",
-                column: "LocalUserId");
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Results_UserId",
-                table: "Results",
-                column: "UserId");
+            migrationBuilder.CreateTable(
+                name: "Results",
+                columns: table => new
+                {
+                    ID = table.Column<int>(type: "int", nullable: false)
+                        .Annotation("SqlServer:Identity", "1, 1"),
+                    TestResult = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    Remarks = table.Column<string>(type: "nvarchar(max)", nullable: false),
+                    DateRecorded = table.Column<DateTime>(type: "datetime2", nullable: false),
+                    UserId = table.Column<string>(type: "nvarchar(450)", nullable: false),
+                    TestID = table.Column<int>(type: "int", nullable: false),
+                    MedicalTestID = table.Column<int>(type: "int", nullable: false),
+                    LocalUserId = table.Column<int>(type: "int", nullable: true)
+                },
+                constraints: table =>
+                {
+                    table.PrimaryKey("PK_Results", x => x.ID);
+                    table.ForeignKey(
+                        name: "FK_Results_AspNetUsers_UserId",
+                        column: x => x.UserId,
+                        principalTable: "AspNetUsers",
+                        principalColumn: "Id",
+                        onDelete: ReferentialAction.Cascade);
+                    table.ForeignKey(
+                        name: "FK_Results_localUsers_LocalUserId",
+                        column: x => x.LocalUserId,
+                        principalTable: "localUsers",
+                        principalColumn: "Id");
+                    table.ForeignKey(
+                        name: "FK_Results_medicalTests_MedicalTestID",
+                        column: x => x.MedicalTestID,
+                        principalTable: "medicalTests",
+                        principalColumn: "ID",
+                        onDelete: ReferentialAction.Cascade);
+                });
 
             migrationBuilder.CreateIndex(
                 name: "IX_AspNetRoleClaims_RoleId",
@@ -231,32 +279,27 @@ namespace Blindness_API.Migrations
                 unique: true,
                 filter: "[NormalizedUserName] IS NOT NULL");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Results_AspNetUsers_UserId",
+            migrationBuilder.CreateIndex(
+                name: "IX_Results_LocalUserId",
                 table: "Results",
-                column: "UserId",
-                principalTable: "AspNetUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+                column: "LocalUserId");
 
-            migrationBuilder.AddForeignKey(
-                name: "FK_Results_localUsers_LocalUserId",
+            migrationBuilder.CreateIndex(
+                name: "IX_Results_MedicalTestID",
                 table: "Results",
-                column: "LocalUserId",
-                principalTable: "localUsers",
-                principalColumn: "Id");
+                column: "MedicalTestID");
+
+            migrationBuilder.CreateIndex(
+                name: "IX_Results_UserId",
+                table: "Results",
+                column: "UserId");
         }
 
         /// <inheritdoc />
         protected override void Down(MigrationBuilder migrationBuilder)
         {
-            migrationBuilder.DropForeignKey(
-                name: "FK_Results_AspNetUsers_UserId",
-                table: "Results");
-
-            migrationBuilder.DropForeignKey(
-                name: "FK_Results_localUsers_LocalUserId",
-                table: "Results");
+            migrationBuilder.DropTable(
+                name: "Articles");
 
             migrationBuilder.DropTable(
                 name: "AspNetRoleClaims");
@@ -274,46 +317,19 @@ namespace Blindness_API.Migrations
                 name: "AspNetUserTokens");
 
             migrationBuilder.DropTable(
+                name: "Results");
+
+            migrationBuilder.DropTable(
                 name: "AspNetRoles");
 
             migrationBuilder.DropTable(
                 name: "AspNetUsers");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Results_LocalUserId",
-                table: "Results");
+            migrationBuilder.DropTable(
+                name: "localUsers");
 
-            migrationBuilder.DropIndex(
-                name: "IX_Results_UserId",
-                table: "Results");
-
-            migrationBuilder.DropColumn(
-                name: "LocalUserId",
-                table: "Results");
-
-            migrationBuilder.DropColumn(
-                name: "UserId",
-                table: "Results");
-
-            migrationBuilder.AddColumn<int>(
-                name: "PatientID",
-                table: "Results",
-                type: "int",
-                nullable: false,
-                defaultValue: 0);
-
-            migrationBuilder.CreateIndex(
-                name: "IX_Results_PatientID",
-                table: "Results",
-                column: "PatientID");
-
-            migrationBuilder.AddForeignKey(
-                name: "FK_Results_localUsers_PatientID",
-                table: "Results",
-                column: "PatientID",
-                principalTable: "localUsers",
-                principalColumn: "Id",
-                onDelete: ReferentialAction.Cascade);
+            migrationBuilder.DropTable(
+                name: "medicalTests");
         }
     }
 }
